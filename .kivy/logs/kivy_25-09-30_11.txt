@@ -1,0 +1,72 @@
+[INFO   ] Logger: Record log in /sdcard/InvoiceApp/.kivy/logs/kivy_25-09-30_11.txt
+[INFO   ] Factory: 195 symbols loaded
+[INFO   ] Image: Providers: img_tex, img_dds, img_sdl2, img_pil (img_ffpyplayer ignored)
+[INFO   ] Text: Provider: sdl2
+[INFO   ] Window: Provider: sdl2
+[INFO   ] GL: Using the "OpenGL ES 2" graphics system
+[INFO   ] GL: Backend used <sdl2>
+[INFO   ] GL: OpenGL version <b'OpenGL ES 3.2 v1.r32p1-01eac0.52688e0652bc37eab85ce86c674ab12f'>
+[INFO   ] GL: OpenGL vendor <b'ARM'>
+[INFO   ] GL: OpenGL renderer <b'Mali-G52 MC2'>
+[INFO   ] GL: OpenGL parsed version: 3, 2
+[INFO   ] GL: Texture max size <16383>
+[INFO   ] GL: Texture max units <16>
+[INFO   ] Window: auto add sdl2 input provider
+[INFO   ] Window: virtual keyboard not allowed, single mode, not docked
+[WARNING] Deprecated property "<BooleanProperty name=allow_stretch>" of object "<kivy.uix.image.Image object at 0x76909d59b0>" has been set, it will be removed in a future version
+[WARNING] Deprecated property "<BooleanProperty name=keep_ratio>" of object "<kivy.uix.image.Image object at 0x76909d59b0>" was accessed, it will be removed in a future version
+[INFO   ] GL: NPOT texture support is available
+[WARNING] Base: Unknown <android> provider
+[INFO   ] Base: Start application main loop
+[INFO   ] Base: Leaving application in progress...
+[WARNING] stderr: Traceback (most recent call last):
+[WARNING] stderr:   File "/storage/emulated/0/sxmtx/InvoiceApp/main.py", line 57, in <module>
+[WARNING] stderr:     InvoiceApp().run()
+[WARNING] stderr:     ~~~~~~~~~~~~~~~~^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/site-packages/kivy/app.py", line 956, in run
+[WARNING] stderr:     runTouchApp()
+[WARNING] stderr:     ~~~~~~~~~~~^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/site-packages/kivy/base.py", line 574, in runTouchApp
+[WARNING] stderr:     EventLoop.mainloop()
+[WARNING] stderr:     ~~~~~~~~~~~~~~~~~~^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/site-packages/kivy/base.py", line 339, in mainloop
+[WARNING] stderr:     self.idle()
+[WARNING] stderr:     ~~~~~~~~~^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/site-packages/kivy/base.py", line 383, in idle
+[WARNING] stderr:     self.dispatch_input()
+[WARNING] stderr:     ~~~~~~~~~~~~~~~~~~~^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/site-packages/kivy/base.py", line 334, in dispatch_input
+[WARNING] stderr:     post_dispatch_input(*pop(0))
+[WARNING] stderr:     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/site-packages/kivy/base.py", line 302, in post_dispatch_input
+[WARNING] stderr:     wid.dispatch('on_touch_up', me)
+[WARNING] stderr:     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+[WARNING] stderr:   File "kivy/_event.pyx", line 731, in kivy._event.EventDispatcher.dispatch
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/site-packages/kivy/uix/behaviors/button.py", line 179, in on_touch_up
+[WARNING] stderr:     self.dispatch('on_release')
+[WARNING] stderr:     ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+[WARNING] stderr:   File "kivy/_event.pyx", line 727, in kivy._event.EventDispatcher.dispatch
+[WARNING] stderr:   File "kivy/_event.pyx", line 1307, in kivy._event.EventObservers.dispatch
+[WARNING] stderr:   File "kivy/_event.pyx", line 1231, in kivy._event.EventObservers._dispatch
+[WARNING] stderr:   File "/sdcard/InvoiceApp/screens/product_detail.py", line 192, in view_history
+[WARNING] stderr:     history = self.load_history().get(self.current_product, [])
+[WARNING] stderr:               ~~~~~~~~~~~~~~~~~^^
+[WARNING] stderr:   File "/sdcard/InvoiceApp/screens/product_detail.py", line 98, in load_history
+[WARNING] stderr:     return load_json(PRODUCT_HISTORY_JSON, default={})
+[WARNING] stderr:   File "/sdcard/InvoiceApp/file_manager.py", line 26, in load_json
+[WARNING] stderr:     return json.load(f)
+[WARNING] stderr:            ~~~~~~~~~^^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/json/__init__.py", line 293, in load
+[WARNING] stderr:     return loads(fp.read(),
+[WARNING] stderr:         cls=cls, object_hook=object_hook,
+[WARNING] stderr:         parse_float=parse_float, parse_int=parse_int,
+[WARNING] stderr:         parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/json/__init__.py", line 346, in loads
+[WARNING] stderr:     return _default_decoder.decode(s)
+[WARNING] stderr:            ~~~~~~~~~~~~~~~~~~~~~~~^^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/json/decoder.py", line 345, in decode
+[WARNING] stderr:     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+[WARNING] stderr:                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+[WARNING] stderr:   File "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python3.13/json/decoder.py", line 363, in raw_decode
+[WARNING] stderr:     raise JSONDecodeError("Expecting value", s, err.value) from None
+[WARNING] stderr: json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
