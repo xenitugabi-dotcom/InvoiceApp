@@ -16,13 +16,14 @@ jobs:
       # Prevent GUI errors during Kivy build
       KIVY_WINDOW: mock
       KIVY_NO_ARGS: "1"
+      ANDROID_HOME: ${{ runner.temp }}/Android
 
     steps:
       # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Cache Python packages for faster builds
+      # 2️⃣ Cache Python packages
       - name: Cache Python packages
         uses: actions/cache@v3
         with:
@@ -43,34 +44,53 @@ jobs:
           python -m pip install --upgrade pip
           pip install kivy==2.3.1
 
-      # 5️⃣ Pre-build headless test (JSON + screens)
+      # 5️⃣ Pre-build headless test
       - name: Headless pre-build test
-        run: |
-          python test_prebuild.py
+        run: python test_prebuild.py
 
       # 6️⃣ Install Buildozer & system build tools
-      - name: Install Buildozer & Build Tools
+      - name: Install Buildozer & system tools
         run: |
           sudo apt update
           sudo apt install -y git-core zip unzip openjdk-11-jdk \
                               build-essential autoconf automake \
                               libtool pkg-config zlib1g-dev \
                               libncurses5 libncurses5-dev \
-                              libffi-dev libssl-dev
+                              libffi-dev libssl-dev \
+                              python3-dev wget curl
           pip install --upgrade buildozer cython==0.29.36
 
-      # 7️⃣ Build APK using Buildozer
-      - name: Build APK
-        run: |
-          buildozer android debug
+      # 7️⃣ Cache Android SDK/NDK
+      - name: Cache Android SDK & NDK
+        id: android-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.ANDROID_HOME }}
+          key: ${{ runner.os }}-android-sdk-ndk
 
-      # 8️⃣ Archive APK as workflow artifact
+      # 8️⃣ Install Android SDK & NDK (only if not cached)
+      - name: Install Android SDK & NDK
+        if: steps.android-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      # 9️⃣ Build APK using Buildozer
+      - name: Build APK
+        run: buildozer android debug
+
+      # 🔟 Upload APK as workflow artifact
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: InvoiceApp-debug.apk
           path: bin/*.apk
 
-      # 9️⃣ Optional: Output path info
+      # 1️⃣1️⃣ Optional: Output bin directory info
       - name: APK location info
         run: ls -l bin/
