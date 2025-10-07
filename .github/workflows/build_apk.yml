@@ -1,0 +1,76 @@
+# InvoiceApp/.github/workflows/build_apk.yml
+name: Build InvoiceApp APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_apk:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    env:
+      # Prevent GUI errors during Kivy build
+      KIVY_WINDOW: mock
+      KIVY_NO_ARGS: "1"
+
+    steps:
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Cache Python packages for faster builds
+      - name: Cache Python packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # 3️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      # 4️⃣ Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install kivy==2.3.1
+
+      # 5️⃣ Pre-build headless test (JSON + screens)
+      - name: Headless pre-build test
+        run: |
+          python test_prebuild.py
+
+      # 6️⃣ Install Buildozer & system build tools
+      - name: Install Buildozer & Build Tools
+        run: |
+          sudo apt update
+          sudo apt install -y git-core zip unzip openjdk-11-jdk \
+                              build-essential autoconf automake \
+                              libtool pkg-config zlib1g-dev \
+                              libncurses5 libncurses5-dev \
+                              libffi-dev libssl-dev
+          pip install --upgrade buildozer cython==0.29.36
+
+      # 7️⃣ Build APK using Buildozer
+      - name: Build APK
+        run: |
+          buildozer android debug
+
+      # 8️⃣ Archive APK as workflow artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: InvoiceApp-debug.apk
+          path: bin/*.apk
+
+      # 9️⃣ Optional: Output path info
+      - name: APK location info
+        run: ls -l bin/
