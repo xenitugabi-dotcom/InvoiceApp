@@ -1,4 +1,4 @@
-name: Build InvoiceApp APK
+name: Build Android APK
 
 on:
   push:
@@ -9,42 +9,32 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_HOME: ${{ runner.temp }}/android-sdk
-      KIVY_WINDOW: mock
-      KIVY_NO_ARGS: "1"
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y openjdk-11-jdk unzip zip git-core build-essential autoconf automake libtool pkg-config zlib1g-dev libffi-dev libssl-dev
-          python -m pip install --upgrade pip
-          pip install buildozer cython==0.29.36 kivy==2.3.1
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip
 
-      - name: Setup Android SDK & NDK
+      - name: Install Buildozer and Cython
         run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          pip install --upgrade pip
+          pip install buildozer cython
 
       - name: Build APK
-        run: buildozer android debug
+        run: |
+          buildozer android debug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: InvoiceApp-debug.apk
+          name: InvoiceApp-APK
           path: bin/*.apk
