@@ -1,4 +1,3 @@
-# InvoiceApp/.github/workflows/build_apk.yml
 name: Build InvoiceApp APK
 
 on:
@@ -8,89 +7,89 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_apk:
-    name: Build APK
+  build:
     runs-on: ubuntu-latest
 
-    env:
-      # Prevent GUI errors during Kivy build
-      KIVY_WINDOW: mock
-      KIVY_NO_ARGS: "1"
-      ANDROID_HOME: ${{ runner.temp }}/Android
-
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2️⃣ Cache Python packages
-      - name: Cache Python packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      # 3️⃣ Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.11"
 
-      # 4️⃣ Install Python dependencies
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install kivy==2.3.1
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            python3-pip \
+            python3-setuptools \
+            git \
+            zip \
+            unzip \
+            openjdk-17-jdk \
+            libncurses6 \
+            libstdc++6 \
+            libffi-dev \
+            libssl-dev \
+            zlib1g \
+            libsqlite3-dev \
+            libjpeg-dev \
+            wget
 
-      # 5️⃣ Pre-build headless test
-      - name: Headless pre-build test
-        run: python test_prebuild.py
-
-      # 6️⃣ Install Buildozer & system build tools
-      - name: Install Buildozer & system tools
+      - name: Set up Android SDK
         run: |
-          sudo apt update
-          sudo apt install -y git-core zip unzip openjdk-11-jdk \
-                              build-essential autoconf automake \
-                              libtool pkg-config zlib1g-dev \
-                              libncurses5 libncurses5-dev \
-                              libffi-dev libssl-dev \
-                              python3-dev wget curl
-          pip install --upgrade buildozer cython==0.29.36
+          # Create Android SDK directory
+          mkdir -p $HOME/android-sdk
+          cd $HOME/android-sdk
 
-      # 7️⃣ Cache Android SDK/NDK
-      - name: Cache Android SDK & NDK
-        id: android-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ANDROID_HOME }}
-          key: ${{ runner.os }}-android-sdk-ndk
-
-      # 8️⃣ Install Android SDK & NDK (only if not cached)
-      - name: Install Android SDK & NDK
-        if: steps.android-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
+          # Download and extract command line tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+          unzip -q cmdline-tools.zip
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/* cmdline-tools/latest/ || true
+
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+
+          # Accept all SDK licenses automatically
+          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+
+          # Get the latest build tools version dynamically
+          LATEST_BUILD_TOOLS=$(sdkmanager --list | grep "build-tools;" | tail -1 | awk '{print $1}' | cut -d';' -f2)
+          echo "Latest Build Tools: $LATEST_BUILD_TOOLS"
+
+          # Install SDK components dynamically
+          yes | sdkmanager --sdk_root=$ANDROID_HOME \
+              "platforms;android-34" \
+              "build-tools;${LATEST_BUILD_TOOLS}" \
+              "platform-tools"
+
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "LATEST_BUILD_TOOLS=$LATEST_BUILD_TOOLS" >> $GITHUB_ENV
 
-      # 9️⃣ Build APK using Buildozer
+      - name: Install Buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython
+
+      - name: Update Buildozer spec dynamically
+        run: |
+          if grep -q "^android.build_tools_version" buildozer.spec; then
+            sed -i "s/^android.build_tools_version.*/android.build_tools_version = $LATEST_BUILD_TOOLS/" buildozer.spec
+          else
+            echo "android.build_tools_version = $LATEST_BUILD_TOOLS" >> buildozer.spec
+          fi
+
       - name: Build APK
-        run: buildozer android debug
+        run: |
+          buildozer -v android debug
 
-      # 🔟 Upload APK as workflow artifact
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: InvoiceApp-debug.apk
+          name: InvoiceApp-APK
           path: bin/*.apk
-
-      # 1️⃣1️⃣ Optional: Output bin directory info
-      - name: APK location info
-        run: ls -l bin/
