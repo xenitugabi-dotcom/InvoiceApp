@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Set up system dependencies
+      # 2️⃣ Install dependencies
       - name: Install system dependencies
         run: |
           sudo apt-get update -y
@@ -24,7 +24,7 @@ jobs:
             libffi-dev libssl-dev zlib1g libncurses6 libstdc++6 libsqlite3-dev libjpeg-dev
 
       # 3️⃣ Add build script
-      - name: Add build script
+      - name: Create build script
         run: |
           cat > build_apk.sh <<'EOF'
           #!/usr/bin/env bash
@@ -32,45 +32,42 @@ jobs:
 
           echo "🚀 Starting Buildozer Android build..."
 
-          # Android SDK environment
+          # --- Android SDK setup ---
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
-          mkdir -p "$ANDROID_HOME"
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
           cd "$ANDROID_HOME"
 
           if [ ! -d "cmdline-tools/latest" ]; then
             echo "📦 Downloading Android commandline tools..."
-            wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-            unzip -q cmdline-tools.zip -d cmdline-tools-temp
-            mkdir -p cmdline-tools/latest
-            mv cmdline-tools-temp/cmdline-tools/* cmdline-tools/latest/ || true
-            rm -rf cmdline-tools-temp cmdline-tools.zip
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
+            unzip -q tools.zip -d cmdline-tools
+            mv cmdline-tools/cmdline-tools cmdline-tools/latest
+            rm -f tools.zip
           fi
 
-          # Accept licenses
+          # --- Accept licenses ---
           yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
 
-          # Dynamically fetch latest build-tools
-          LATEST_BUILD_TOOLS=$(sdkmanager --list | grep "build-tools;" | tail -n1 | awk '{print $1}')
-
+          # --- Install SDK components ---
           yes | sdkmanager --sdk_root=$ANDROID_HOME \
             "platform-tools" \
             "platforms;android-34" \
-            "$LATEST_BUILD_TOOLS" || true
+            "build-tools;34.0.0" || true
 
-          # Return to project root
+          # --- Go back to project root ---
           cd "$GITHUB_WORKSPACE"
 
-          # Install Python dependencies
+          # --- Install Python deps ---
           pip install --upgrade pip
           pip install buildozer cython
 
-          # Build APK
+          # --- Build APK ---
           echo "🏗️ Building APK..."
           buildozer -v android debug
 
-          # Verify APK
+          # --- Verify output ---
           if [ -d "bin" ]; then
             echo "✅ APK built successfully! Contents of bin/:"
             ls -lh bin/
@@ -82,7 +79,7 @@ jobs:
 
           chmod +x build_apk.sh
 
-      # 4️⃣ Run the build script
+      # 4️⃣ Run the build
       - name: Run Buildozer Android build
         run: ./build_apk.sh
 
